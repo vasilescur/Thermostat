@@ -1,4 +1,4 @@
-# Thermometer
+# Thermostat
 
 A servo motor controller for my dorm room's thermostat, connected to the Internet of Things through the 
 [Particle Cloud](https://www.particle.io).
