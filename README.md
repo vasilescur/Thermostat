@@ -1,35 +1,66 @@
 # Thermometer
 
-A Particle project named Thermometer
+A servo motor controller for my dorm room's thermostat, connected to the Internet of Things through the 
+[Particle Cloud](https://www.particle.io).
 
-## Welcome to your project!
+## How it Works
 
-Every new Particle project is composed of 3 important elements that you'll see have been created in your project directory for Thermometer.
+I've connected a small analog servo motor to a Particle Photon board, and duct taped it to the thermostat so the gear on the
+servo spins the temperature dial's gear. The code running on the Photon uses the lovely Particle API to set the angle of the
+servo:
 
-#### ```/src``` folder:  
-This is the source folder that contains the firmware files for your project. It should *not* be renamed. 
-Anything that is in this folder when you compile your project will be sent to our compile service and compiled into a firmware binary for the Particle device that you have targeted.
+```c++
+int controlValue = percentToAngle(newAngle);
+this->servo->write(controlValue);
+```
 
-If your application contains multiple files, they should all be included in the `src` folder. If your firmware depends on Particle libraries, those dependencies are specified in the `project.properties` file referenced below.
+A set of functions is made available to be called using the Particle REST API, like so:
 
-#### ```.ino``` file:
-This file is the firmware that will run as the primary application on your Particle device. It contains a `setup()` and `loop()` function, and can be written in Wiring or C/C++. For more information about using the Particle firmware API to create firmware for your Particle device, refer to the [Firmware Reference](https://docs.particle.io/reference/firmware/) section of the Particle documentation.
+```c++
+Particle.function("setPercent", &Thermometer::_setAngleAsync, this);
+Particle.function("sysDelay", &Thermometer::_sysDelay, this);
+Particle.function("getAngle", &Thermometer::_getAngle, this);
+...
+```
 
-#### ```project.properties``` file:  
-This is the file that specifies the name and version number of the libraries that your project depends on. Dependencies are added automatically to your `project.properties` file when you add a library to a project using the `particle library add` command in the CLI or add a library in the Desktop IDE.
+Then, I created a simple [IFTTT](https://ifttt.com) applet triggered by my Google Assistant that calls the appropriate
+function through the Particle Cloud, and sets the temperature remotely.
 
-## Adding additional files to your project
+## Building
 
-#### Projects with multiple sources
-If you would like add additional files to your application, they should be added to the `/src` folder. All files in the `/src` folder will be sent to the Particle Cloud to produce a compiled binary.
+Prerequisites:
+- Particle CLI or Particle Desktop IDE or Particle Workbench
 
-#### Projects with external libraries
-If your project includes a library that has not been registered in the Particle libraries system, you should create a new folder named `/lib/<libraryname>/src` under `/<project dir>` and add the `.h`, `.cpp` & `library.properties` files for your library there. Read the [Firmware Libraries guide](https://docs.particle.io/guide/tools-and-features/libraries/) for more details on how to develop libraries. Note that all contents of the `/lib` folder and subfolders will also be sent to the Cloud for compilation.
+Make sure you have the correct Particle device target selected and run `particle compile <platform>`.
 
-## Compiling your project
+This program is intended to be run on the Particle [Photon](https://store.particle.io/products/photon) device, so the 
+build and flash commands would be:
 
-When you're ready to compile your project, make sure you have the correct Particle device target selected and run `particle compile <platform>` in the CLI or click the Compile button in the Desktop IDE. The following files in your project folder will be sent to the compile service:
+```bash
+particle compile photon --saveTo Thermometer.bin
+particle flash <device-name> Thermometer.bin
+```
 
-- Everything in the `/src` folder, including your `.ino` application file
-- The `project.properties` file for your project
-- Any libraries stored under `lib/<libraryname>/src`
+To get your device name, connect via USB and run
+
+```bash
+particle serial list
+```
+
+Or go to the [Particle Console](https://console.particle.io/devices).
+
+## Contributing
+
+Pull requests are welcome. 
+
+To Do:
+
+- [ ] Add a persistant "Favorite temperature" setting
+- [ ] Create an Android/iOS mobile app to interface with the device
+- [ ] Create a nice web interface
+- [ ] 3D print a proper way to attach it to the thermostat
+- [ ] User authentication for the API
+
+## License
+
+This code is available under the MIT License.
